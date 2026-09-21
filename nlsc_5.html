@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLSC 地號腳本產生器</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --border: #d8d4cc;
+    --border-strong: #b0aa9e;
+    --text: #1a1816;
+    --text-muted: #6b6560;
+    --accent: #2c5f8a;
+    --accent-light: #e8f0f7;
+    --accent-dark: #1a3d5c;
+    --success: #2d6a4f;
+    --success-light: #e8f5ee;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Noto Sans TC', sans-serif;
+    --radius: 6px;
+    --radius-lg: 10px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+  }
+
+  header {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 2rem;
+    border-bottom: 1.5px solid var(--border-strong);
+    padding-bottom: 1rem;
+  }
+
+  header h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--accent-dark);
+  }
+
+  header p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+    letter-spacing: 0.02em;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 1rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+
+  textarea {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    line-height: 1.7;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    background: var(--bg);
+    color: var(--text);
+    resize: vertical;
+    min-height: 130px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  textarea:focus {
+    border-color: var(--accent);
+    background: #fff;
+  }
+
+  textarea::placeholder { color: var(--text-muted); opacity: 0.6; }
+
+  .btn-row {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.9rem;
+  }
+
+  button {
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 0.5rem 1.1rem;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    outline: none;
+  }
+
+  #btn-generate {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  #btn-generate:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+
+  #btn-clear {
+    background: transparent;
+    color: var(--text-muted);
+  }
+
+  #btn-clear:hover { background: var(--bg); color: var(--text); }
+
+  .output-card { display: none; }
+  .output-card.visible { display: block; }
+
+  .output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .output-header label { margin: 0; }
+
+  #btn-copy {
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--accent);
+    font-size: 0.78rem;
+    padding: 0.3rem 0.8rem;
+  }
+
+  #btn-copy:hover { background: var(--accent-light); }
+  #btn-copy.copied { background: var(--success-light); color: var(--success); border-color: var(--success); }
+
+  pre#output {
+    font-family: var(--mono);
+    font-size: 0.83rem;
+    line-height: 1.75;
+    background: #1a1816;
+    color: #e8e4dc;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .error-card {
+    background: #fff5f5;
+    border: 1px solid #f0c0c0;
+    border-radius: var(--radius-lg);
+    padding: 0.9rem 1.25rem;
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 1rem;
+    font-size: 0.83rem;
+    color: #8b2020;
+    display: none;
+  }
+
+  .error-card.visible { display: block; }
+
+  .hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    line-height: 1.6;
+  }
+
+  footer {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 2rem;
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>NLSC 地號腳本產生器</h1>
+  <p>貼入屏東縣地號清單，自動產生可貼進國土測繪圖資服務雲 Console 的 JavaScript 腳本</p>
+</header>
+
+<div class="card">
+  <label for="input">輸入地號清單</label>
+  <textarea id="input" placeholder="屏東市光明段　477、512、514&#10;屏東市龍華段　1385"></textarea>
+  <p class="hint">支援：頓號、逗號、空白、換行混用。跨鄉鎮請換行或用分號區隔。</p>
+  <div class="btn-row">
+    <button id="btn-generate">產生腳本</button>
+    <button id="btn-clear">清除</button>
+  </div>
+</div>
+
+<div class="error-card" id="error-card"></div>
+
+<div class="card output-card" id="output-card">
+  <div class="output-header">
+    <label>輸出腳本</label>
+    <button id="btn-copy">複製</button>
+  </div>
+  <pre id="output"></pre>
+</div>
+
+<footer>屏東縣 33 鄉鎮 ／ 固定縣碼 T</footer>
+
+<script>
+const TOWNS = {
+  '三地門鄉':'T26','九如鄉':'T08','內埔鄉':'T13','六龜鄉':'T34',
+  '南州鄉':'T20','屏東市':'T01','來義鄉':'T30','佳冬鄉':'T21',
+  '枋山鄉':'T25','枋寮鄉':'T16','東港鎮':'T03','林邊鄉':'T19',
+  '泰武鄉':'T29','春日鄉':'T31','獅子鄉':'T32','琉球鄉':'T22',
+  '牡丹鄉':'T33','瑪家鄉':'T28','萬丹鄉':'T05','萬巒鄉':'T12',
+  '竹田鄉':'T14','里港鄉':'T09','長治鄉':'T06','恆春鎮':'T04',
+  '崁頂鄉':'T18','新園鄉':'T17','新埤鄉':'T15','潮州鎮':'T02',
+  '滿州鄉':'T24','麟洛鄉':'T07','霧臺鄉':'T27','高樹鄉':'T11',
+  '鹽埔鄉':'T10','車城鄉':'T23'
+};
+
+// 常見異體／誤寫名稱：解析時接受，輸出仍使用官方名稱與代碼
+const TOWN_ALIASES = {
+  '滿洲鄉':'滿州鄉'
+};
+
+// 鄉鎮名照長度排序（長的優先），避免短名稱先比對到
+const TOWN_KEYS = [...Object.keys(TOWNS), ...Object.keys(TOWN_ALIASES)]
+  .sort((a,b) => b.length - a.length);
+
+function matchTown(str) {
+  for (const inputName of TOWN_KEYS) {
+    if (str.startsWith(inputName)) {
+      const name = TOWN_ALIASES[inputName] || inputName;
+      return { name, code: TOWNS[name], rest: str.slice(inputName.length) };
+    }
+  }
+  return null;
+}
+
+function parseGroup(raw) {
+  // 允許鄉鎮名與地段名之間有空白
+  const str = raw.trim().replace(/\s+/g, '');
+  const town = matchTown(str);
+  if (!town) return { error: `無法辨識鄉鎮名：「${raw.trim().slice(0,6)}…」` };
+
+  const rest = town.rest.trim();
+  // 找地段名（到第一個「段」字為止，含「段」）
+  const m = rest.match(/^(.+段)([\s\S]*)/);
+  if (!m) return { error: `找不到地段名（需含「段」字）：「${rest.slice(0,10)}」` };
+
+  const section = m[1];
+  const landsRaw = m[2];
+  const lands = landsRaw
+    .split(/[、，,\s\t\u3000]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  if (lands.length === 0) return { error: `地段「${section}」底下沒有地號` };
+
+  return { townName: town.name, townCode: town.code, section, lands };
+}
+
+function generate(input) {
+  // 用換行或全半形分號切成群組
+  const rawGroups = input.split(/[\n；;]+/).map(s => s.trim()).filter(Boolean);
+  if (rawGroups.length === 0) return { error: '請輸入地號清單' };
+
+  const groups = [];
+  for (const raw of rawGroups) {
+    const g = parseGroup(raw);
+    if (g.error) return { error: g.error };
+    groups.push(g);
+  }
+
+  const lines = [];
+  lines.push(`await nlsc.setCity('T');`);
+  lines.push(`await nlsc.setTown('${groups[0].townCode}');`);
+  lines.push(`nlsc.sections();`);
+  lines.push(`await nlsc.queryBatch([`);
+
+  let prevTown = groups[0].townCode;
+
+  for (const g of groups) {
+    g.lands.forEach((land, i) => {
+      let obj = '';
+      // 切換鄉鎮時加 town
+      if (g.townCode !== prevTown && i === 0) {
+        obj = `  {town:'${g.townCode}', section:'${g.section}', land:'${land}'},`;
+        prevTown = g.townCode;
+      } else if (i === 0) {
+        // 同鄉鎮但新地段
+        obj = `  {section:'${g.section}', land:'${land}'},`;
+      } else {
+        obj = `  {land:'${land}'},`;
+      }
+      lines.push(obj);
+    });
+  }
+
+  lines.push(`]);`);
+  lines.push(`// nlsc.sumArea([ /* 查到的面積依序填入 */ ]);`);
+
+  return { script: lines.join('\n') };
+}
+
+// ── UI 事件 ──────────────────────────────────────────
+const inputEl   = document.getElementById('input');
+const outputEl  = document.getElementById('output');
+const outputCard = document.getElementById('output-card');
+const errorCard = document.getElementById('error-card');
+const btnCopy   = document.getElementById('btn-copy');
+
+document.getElementById('btn-generate').addEventListener('click', () => {
+  const val = inputEl.value;
+  errorCard.className = 'error-card';
+  outputCard.className = 'card output-card';
+
+  if (!val.trim()) {
+    errorCard.textContent = '請先輸入地號清單';
+    errorCard.className = 'error-card visible';
+    return;
+  }
+
+  const result = generate(val);
+
+  if (result.error) {
+    errorCard.textContent = '⚠ ' + result.error;
+    errorCard.className = 'error-card visible';
+  } else {
+    outputEl.textContent = result.script;
+    outputCard.className = 'card output-card visible';
+  }
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  inputEl.value = '';
+  outputCard.className = 'card output-card';
+  errorCard.className = 'error-card';
+  inputEl.focus();
+});
+
+btnCopy.addEventListener('click', () => {
+  navigator.clipboard.writeText(outputEl.textContent).then(() => {
+    btnCopy.textContent = '已複製 ✓';
+    btnCopy.className = 'copied';
+    setTimeout(() => {
+      btnCopy.textContent = '複製';
+      btnCopy.className = '';
+    }, 1800);
+  });
+});
+</script>
+</body>
+</html>
