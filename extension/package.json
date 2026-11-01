@@ -1,0 +1,12 @@
+{
+  "name": "nlsc-extension",
+  "version": "1.1.3",
+  "private": true,
+  "description": "NLSC 桌面外掛與 iOS 共用查詢核心",
+  "scripts": {
+    "test": "node --test background.test.cjs capture-bridge.test.cjs capture.test.cjs options.test.cjs ios/ios.test.cjs",
+    "sync:ios": "node ios/scripts/sync-resources.cjs",
+    "check": "node --check content.js && node --check background.js && node --check capture-bridge.js && node --check capture-geometry.js && node --check ios/NLSCMobile/Resources/content.js && node --check ios/NLSCMobile/Resources/ios-bridge.js && node --check ios/NLSCMobile/Resources/mobile-ui.js"
+  },
+  "engines": { "node": ">=20" }
+}

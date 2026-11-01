@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "NLSC 測繪自動化小工具",
+  "version": "1.1.3",
+  "description": "自動載入國土測繪圖資雲常用輔助腳本與面積爬取功能",
+  "permissions": [
+    "activeTab",
+    "downloads"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "授權本頁並開始依地段批次截圖"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "授權本頁並開始地段批次截圖"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://maps.nlsc.gov.tw/T09/mapshow.action*"
+      ],
+      "js": [
+        "capture-geometry.js",
+        "capture-bridge.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://maps.nlsc.gov.tw/T09/mapshow.action*"
+      ],
+      "js": [
+        "capture-geometry.js",
+        "content.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_idle"
+    }
+  ]
+}

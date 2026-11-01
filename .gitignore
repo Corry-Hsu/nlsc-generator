@@ -1,0 +1,20 @@
+# Local backups and dependencies
+備份/
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Xcode local state and generated build outputs
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.ipa
+*.xcarchive/
+NLSCMobile.xcodeproj/
+
+# Credentials and signing material
+.env
+.env.*
+*.p12
+*.mobileprovision
