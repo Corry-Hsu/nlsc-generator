@@ -11,6 +11,8 @@
 | `extension/content.js` | 地號解析、批次查詢定位、著色、面積擷取與分組加總 |
 | `extension/capture-*.js`、`extension/background.js` | 桌面截圖與下載 |
 | `extension/ios/` | iOS App、原生截圖／匯出及觸控介面 |
+| `extension/safari/` | iPhone Safari 單檔腳本、手動截圖取景與安裝說明 |
+| `.github/workflows/ios-cloud.yml` | GitHub 雲端 Mac 編譯及手動 TestFlight 發布 |
 
 ## 桌面安裝
 
@@ -20,11 +22,12 @@
 
 ## iPhone／iPad
 
-手機版為獨立 iOS App，最低 iOS 16，在 App 內開啟 NLSC 網站。它不是直接安裝至 Safari 的外掛。
+提供兩條路線，兩者共用桌面版查詢核心：
 
-已完成原始碼與 JavaScript 測試，尚未完成 Xcode 編譯及 iPhone 實機驗證，特別是地圖 GPU 圖層截圖與網站手機排版仍需驗收。需在 Mac 用 Xcode 編譯及簽署後才能安裝，不能直接從 GitHub Pages 安裝。
+- **只有 iPhone、先試用**：[Safari 腳本安裝說明](extension/safari/README.md)。先裝 Userscripts，再用 Safari 開啟 [單檔腳本](https://raw.githubusercontent.com/Corry-Hsu/nlsc-generator/main/extension/safari/nlsc-mobile.user.js) 安裝。支援查詢、面積及 Excel XML；逐行截圖為自動取景後手動按截圖鍵，不會自動儲存 PNG。
+- **App 完整功能路線**：[不用 Mac 的雲端編譯／TestFlight 設定](extension/ios/CLOUD.md)。GitHub 雲端 Mac 負責編譯及簽署；需自行完成 Apple Developer 與 GitHub secrets 設定才能上傳 TestFlight。尚無可直接安裝的邀請連結。
 
-完整安裝、操作與實機驗收請見 [iOS 說明](extension/ios/README.md)。
+App 最低 iOS 16。程式層測試不能取代 iPhone 實機驗證，尤其網站手機排版與 GPU 地圖截圖。GitHub Pages 僅能提供腳本下載，不能直接安裝原生 App。自行使用 Mac 的步驟見 [iOS 說明](extension/ios/README.md)。
 
 ## 日後維護
 
@@ -34,13 +37,14 @@
 git clone https://github.com/Corry-Hsu/nlsc-generator.git
 cd nlsc-generator/extension
 npm run sync:ios
+npm run build:safari
 npm run check
 npm test
 ```
 
 修改查詢或計算邏輯時編輯 `extension/content.js`；修改共用截圖幾何時編輯 `extension/capture-geometry.js`。接著執行上面的同步與測試指令，將原始碼和同步產生的手機資源一起提交。
 
-`extension/ios/NLSCMobile/Resources/content.js` 與 `capture-geometry.js` 是同步產物，請勿直接修改。手機專屬功能分別位於 `ios-bridge.js`、`mobile-ui.js` 和 `MapViewController.swift`。
+`extension/ios/NLSCMobile/Resources/content.js`、`capture-geometry.js` 及 `extension/safari/nlsc-mobile.user.js` 是產物，請勿直接修改。手機專屬功能位於 `ios-bridge.js`、`mobile-ui.js`、`MapViewController.swift` 和 `safari/adapter.js`。
 
 Mac 上建立 iOS 工程：
 

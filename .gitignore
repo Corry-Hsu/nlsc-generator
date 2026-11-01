@@ -18,3 +18,11 @@ NLSCMobile.xcodeproj/
 .env.*
 *.p12
 *.mobileprovision
+*.p8
+*.key
+*.cer
+*.pem
+.bundle/
+vendor/bundle/
+fastlane/report.xml
+fastlane/README.md

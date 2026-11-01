@@ -1,0 +1,91 @@
+name: iOS Cloud Build
+on:
+  push:
+    branches: [main]
+    paths: ['extension/**', '.github/workflows/ios-cloud.yml']
+  pull_request:
+    paths: ['extension/**', '.github/workflows/ios-cloud.yml']
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'check=免帳號編譯; bootstrap=首次建立簽署並上傳; testflight=使用現有簽署上傳'
+        type: choice
+        options: [check, bootstrap, testflight]
+        default: check
+permissions:
+  contents: read
+concurrency:
+  group: ios-cloud-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sync mobile resources and test
+        run: |
+          npm run sync:ios
+          npm run build:safari
+          npm run check
+          npm test
+          git diff --exit-code -- ios/NLSCMobile/Resources safari/nlsc-mobile.user.js
+      - name: Generate Xcode project
+        run: |
+          if ! command -v xcodegen >/dev/null; then brew install xcodegen; fi
+          cd ios
+          ruby -c fastlane/Fastfile
+          xcodegen generate
+      - name: Build for simulator without signing
+        run: |
+          xcodebuild -project ios/NLSCMobile.xcodeproj -scheme NLSCMobile -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NLSCMobile-simulator-not-installable-on-iPhone
+          path: extension/ios/build/Build/Products/Debug-iphonesimulator/NLSCMobile.app
+          retention-days: 7
+  testflight:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.mode != 'check'
+    needs: check
+    runs-on: macos-15
+    timeout-minutes: 45
+    environment: testflight
+    defaults:
+      run:
+        working-directory: extension/ios
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      MATCH_GIT_TOKEN: ${{ secrets.MATCH_GIT_TOKEN }}
+      MATCH_GIT_URL: ${{ vars.MATCH_GIT_URL }}
+      NLSC_BUNDLE_ID: ${{ vars.NLSC_BUNDLE_ID }}
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      SIGNING_MODE: ${{ inputs.mode }}
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_HIDE_CHANGELOG: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - name: Validate settings before contacting Apple
+        run: |
+          ruby -e 'keys=%w[ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 MATCH_PASSWORD MATCH_GIT_TOKEN MATCH_GIT_URL NLSC_BUNDLE_ID APPLE_TEAM_ID]; missing=keys.select { |k| ENV[k].to_s.strip.empty? }; abort "Missing: #{missing.join(", ")}" unless missing.empty?'
+      - name: Generate and upload
+        run: |
+          node scripts/sync-resources.cjs
+          if ! command -v xcodegen >/dev/null; then brew install xcodegen; fi
+          xcodegen generate
+          bundle install
+          bundle exec fastlane ios beta
