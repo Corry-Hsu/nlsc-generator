@@ -29,6 +29,8 @@
 
 App 最低 iOS 16。程式層測試不能取代 iPhone 實機驗證，尤其網站手機排版與 GPU 地圖截圖。GitHub Pages 僅能提供腳本下載，不能直接安裝原生 App。自行使用 Mac 的步驟見 [iOS 說明](extension/ios/README.md)。
 
+2026-11-01：[雲端 Xcode 免簽署編譯與 47 項測試通過](https://github.com/Corry-Hsu/nlsc-generator/actions/runs/41287924982)。TestFlight 簽署上傳尚待設定 Apple 帳號與 secrets，手機功能尚待實機驗收。
+
 ## 日後維護
 
 需要 Node.js 20 以上；JavaScript 測試不需安裝額外 npm 套件。

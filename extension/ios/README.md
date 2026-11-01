@@ -50,7 +50,7 @@
 
 ## 驗證狀態與實機驗收
 
-Windows 已通過原版 36 項 JavaScript 測試及新增的 iOS bridge／匯出測試；尚未在 Xcode 編譯、模擬器或真實 iPhone 執行，不能保證目前已達到手機上與桌面完全一致。
+2026-11-01 已在 [GitHub 雲端 Mac 完成 Xcode 模擬器目標編譯](https://github.com/Corry-Hsu/nlsc-generator/actions/runs/41287924982)，並通過原版、iOS bridge／匯出與 Safari 共 47 項 JavaScript 測試。尚未啟動模擬器執行、簽署上傳 TestFlight 或在真實 iPhone 驗收，不能保證目前已達到手機上與桌面完全一致。雲端 artifact 是模擬器 App，不能直接安裝至 iPhone。
 
 Mac 端先確認編譯：
 
@@ -71,5 +71,7 @@ Excel XML 可交給支援該格式的軟體開啟；手機預覽與 Numbers 的�
 在專案根目錄執行測試：
 
 ```sh
-node --test background.test.cjs capture-bridge.test.cjs capture.test.cjs options.test.cjs ios/ios.test.cjs
+npm run sync:ios
+npm run build:safari
+npm test
 ```
