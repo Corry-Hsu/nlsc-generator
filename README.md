@@ -33,6 +33,8 @@ App 最低 iOS 16。程式層測試不能取代 iPhone 實機驗證，尤其網�
 
 ## 日後維護
 
+若希望 Codex 在電腦休眠後繼續開發，見 [Codex 雲端開發接續說明](extension/cloud/README.md)。專案已放在 GitHub，還需在帳號建立並發布 Codex Cloud 環境。
+
 需要 Node.js 20 以上；JavaScript 測試不需安裝額外 npm 套件。
 
 ```sh
